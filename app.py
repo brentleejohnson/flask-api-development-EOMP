@@ -127,20 +127,48 @@ def login():
             return jsonify(response)
 
 
-# cart and product table
+# Trolley & Products
+@app.route('/adding/', methods=["POST"])
+def add_products():
+    response = {}
+
+    if request.method == "POST":
+        category = request.form['category']
+        name = request.form['name']
+        price = request.form['price']
+        description = request.form['description']
+
+        with sqlite3.connect("point_sale.db") as connection:
+            cursor = connection.cursor()
+            cursor.execute("INSERT INTO product_info("
+                           "category,"
+                           "name,"
+                           "price,"
+                           "description) VALUES(?, ?, ?, ?)", (category, name, price, description))
+            connection.commit()
+            response["message"] = "success"
+            response["status_code"] = 201
+        return response
+
+
 @app.route('/viewing/')
 def view_products():
-    pass
+    response = {}
+
+    with sqlite3.connect("point_sale.db") as connection:
+        cursor = connection.cursor()
+        cursor.execute("SELECT * FROM product_info")
+
+        posts = cursor.fetchall()
+
+    response['status_code'] = 200
+    response['data'] = posts
+    return response
 
 
 # cart
 @app.route('/changing/')
 def change_products():
-    pass
-
-
-@app.route('/adding/')
-def add_products():
     pass
 
 
