@@ -74,6 +74,7 @@ def identity(payload):
 app = Flask(__name__)
 app.debug = True
 app.config['SECRET_KEY'] = 'super-secret'
+app.config['JWT_EXPIRATION_DELTA'] = datetime.timedelta(seconds=20)
 CORS(app)
 
 jwt = JWT(app, authenticate, identity)
@@ -167,7 +168,6 @@ def view_products():
 
 # TROLLEY
 @app.route('/changing/<int:product_id>/', methods=["PUT"])
-@jwt_required()
 def updating_products(product_id):
     response = {}
 
@@ -182,7 +182,15 @@ def updating_products(product_id):
 
                 with sqlite3.connect('point_of_sale.db') as connection:
                     cursor = connection.cursor()
-                    cursor.execute("UPDATE product_info SET category =? WHERE id=?", (put_data["category"], product_id))
+                    cursor.execute("UPDATE product_info SET category =? WHERE product_id=?", (put_data["category"],
+                                                                                              product_id))
+            elif incoming_data.get("name") is not None:
+                put_data["name"] = incoming_data.get("name")
+
+                with sqlite3.connect('point_of_sale.db') as connection:
+                    cursor = connection.cursor()
+                    cursor.execute("UPDATE product_info SET name =? WHERE product_id=?",
+                                   (put_data["name"], product_id))
 
                     conn.commit()
                     response['message'] = "Update was successfully"
@@ -191,10 +199,17 @@ def updating_products(product_id):
     return response
 
 
-@app.route('/deleting/<int:product_id>')
-@jwt_required()
+@app.route('/delete/<int:product_id>/')
 def delete_products(product_id):
-    pass
+    response = {}
+
+    with sqlite3.connect("point_of_sale.db") as connection:
+        cursor = connection.cursor()
+        cursor.execute("DELETE FROM product_info WHERE product_id=" + str(product_id))
+        connection.commit()
+        response['status_code'] = 200
+        response['message'] = "Product deleted successfully."
+    return response
 
 
 if __name__ == "__main__":
