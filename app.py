@@ -129,22 +129,21 @@ def login():
 
 # Trolley & Products
 @app.route('/adding/', methods=["POST"])
+@jwt_required()
 def add_products():
     response = {}
 
     if request.method == "POST":
         category = request.form['category']
-        name = request.form['name']
         price = request.form['price']
         description = request.form['description']
 
-        with sqlite3.connect("point_sale.db") as connection:
+        with sqlite3.connect("point_of_sale.db") as connection:
             cursor = connection.cursor()
             cursor.execute("INSERT INTO product_info("
                            "category,"
-                           "name,"
                            "price,"
-                           "description) VALUES(?, ?, ?, ?)", (category, name, price, description))
+                           "description) VALUES(?, ?, ?)", (category, price, description))
             connection.commit()
             response["message"] = "success"
             response["status_code"] = 201
@@ -155,7 +154,7 @@ def add_products():
 def view_products():
     response = {}
 
-    with sqlite3.connect("point_sale.db") as connection:
+    with sqlite3.connect("point_of_sale.db") as connection:
         cursor = connection.cursor()
         cursor.execute("SELECT * FROM product_info")
 
@@ -166,14 +165,35 @@ def view_products():
     return response
 
 
-# cart
-@app.route('/changing/')
-def change_products():
-    pass
+# TROLLEY
+@app.route('/changing/<int:product_id>/', methods=["PUT"])
+@jwt_required()
+def updating_products(product_id):
+    response = {}
+
+    if request.method == "PUT":
+        with sqlite3.connect('point_of_sale.db') as conn:
+            print(request.json)
+            incoming_data = dict(request.json)
+            put_data = {}
+
+            if incoming_data.get("category") is not None:
+                put_data["category"] = incoming_data.get("category")
+
+                with sqlite3.connect('point_of_sale.db') as connection:
+                    cursor = connection.cursor()
+                    cursor.execute("UPDATE product_info SET category =? WHERE id=?", (put_data["category"], product_id))
+
+                    conn.commit()
+                    response['message'] = "Update was successfully"
+                    response['status_code'] = 200
+
+    return response
 
 
-@app.route('/deleting/<int:item_id>')
-def delete_products(item_id):
+@app.route('/deleting/<int:product_id>')
+@jwt_required()
+def delete_products(product_id):
     pass
 
 
