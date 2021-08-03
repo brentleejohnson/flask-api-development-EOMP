@@ -102,30 +102,30 @@ def user_registration():
         return response
 
 
-@app.route("/login/", methods=["POST"])
-def login():
-    response = {}
-
-    if request.method == "POST":
-
-        username = request.form['username']
-        password = request.form['password']
-
-        with sqlite3.connect("point_of_sale.db") as conn:
-            cursor = conn.cursor()
-            cursor.execute("SELECT * FROM user WHERE username='{}' AND password='{}'".format(username, password))
-            user_information = cursor.fetchone()
-
-        if user_information:
-            response["user_info"] = user_information
-            response["message"] = "Success"
-            response["status_code"] = 201
-            return jsonify(response)
-
-        else:
-            response['message'] = "Login Unsuccessful, please try again"
-            response['status_code'] = 401
-            return jsonify(response)
+# @app.route("/login/", methods=["POST"])
+# def login():
+#     response = {}
+#
+#     if request.method == "POST":
+#
+#         username = request.form['username']
+#         password = request.form['password']
+#
+#         with sqlite3.connect("point_of_sale.db") as conn:
+#             cursor = conn.cursor()
+#             cursor.execute("SELECT * FROM user WHERE username='{}' AND password='{}'".format(username, password))
+#             user_information = cursor.fetchone()
+#
+#         if user_information:
+#             response["user_info"] = user_information
+#             response["message"] = "Success"
+#             response["status_code"] = 201
+#             return jsonify(response)
+#
+#         else:
+#             response['message'] = "Login Unsuccessful, please try again"
+#             response['status_code'] = 401
+#             return jsonify(response)
 
 
 # Trolley & Products
@@ -160,10 +160,24 @@ def view_products():
         cursor = connection.cursor()
         cursor.execute("SELECT * FROM product")
 
-        posts = cursor.fetchall()
+        products = cursor.fetchall()
 
     response['status_code'] = 200
-    response['data'] = posts
+    response['data'] = products
+    return response
+
+
+@app.route('/view-one/<int:product_id>/')
+def view_one_product(product_id):
+    response = {}
+
+    with sqlite3.connect("point_of_sale.db") as connection:
+        cursor = connection.cursor()
+        cursor.execute("SELECT * FROM product WHERE product_id=?", str(product_id))
+        product = cursor.fetchall()
+
+    response['status_code'] = 200
+    response['data'] = product
     return response
 
 
@@ -184,7 +198,7 @@ def updating_products(product_id):
                 with sqlite3.connect('point_of_sale.db') as connection:
                     cursor = connection.cursor()
                     cursor.execute("UPDATE product SET category =? WHERE product_id=?", (put_data["category"],
-                                                                                              product_id))
+                                                                                         product_id))
             elif incoming_data.get("name") is not None:
                 put_data["name"] = incoming_data.get("name")
 
