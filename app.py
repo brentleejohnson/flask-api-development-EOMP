@@ -45,9 +45,9 @@ def init_product_table():
 
     conn.execute("CREATE TABLE IF NOT EXISTS product(product_id INTEGER PRIMARY KEY AUTOINCREMENT,"
                  "category TEXT NOT NULL,"
+                 "name TEXT NOT NULL,"
                  "price TEXT NOT NULL,"
-                 "description TEXT NOT NULL,"
-                 "name TEXT NOT NULL)")
+                 "description TEXT NOT NULL)")
     print("user table created successfully")
     conn.close()
 
@@ -74,7 +74,7 @@ def identity(payload):
 app = Flask(__name__)
 app.debug = True
 app.config['SECRET_KEY'] = 'super-secret'
-app.config['JWT_EXPIRATION_DELTA'] = datetime.timedelta(seconds=20)
+app.config['JWT_EXPIRATION_DELTA'] = datetime.timedelta(seconds=4000)
 CORS(app)
 
 jwt = JWT(app, authenticate, identity)
@@ -130,34 +130,35 @@ def login():
 
 # Trolley & Products
 @app.route('/adding/', methods=["POST"])
-@jwt_required()
 def add_products():
     response = {}
 
     if request.method == "POST":
         category = request.form['category']
+        name = request.form["name"]
         price = request.form['price']
         description = request.form['description']
 
         with sqlite3.connect("point_of_sale.db") as connection:
             cursor = connection.cursor()
-            cursor.execute("INSERT INTO product_info("
+            cursor.execute("INSERT INTO product("
                            "category,"
+                           "name,"
                            "price,"
-                           "description) VALUES(?, ?, ?)", (category, price, description))
+                           "description) VALUES(?, ?, ?, ?)", (category, name, price, description))
             connection.commit()
             response["message"] = "success"
             response["status_code"] = 201
         return response
 
 
-@app.route('/viewing/')
+@app.route('/view/')
 def view_products():
     response = {}
 
     with sqlite3.connect("point_of_sale.db") as connection:
         cursor = connection.cursor()
-        cursor.execute("SELECT * FROM product_info")
+        cursor.execute("SELECT * FROM product")
 
         posts = cursor.fetchall()
 
@@ -182,14 +183,14 @@ def updating_products(product_id):
 
                 with sqlite3.connect('point_of_sale.db') as connection:
                     cursor = connection.cursor()
-                    cursor.execute("UPDATE product_info SET category =? WHERE product_id=?", (put_data["category"],
+                    cursor.execute("UPDATE product SET category =? WHERE product_id=?", (put_data["category"],
                                                                                               product_id))
             elif incoming_data.get("name") is not None:
                 put_data["name"] = incoming_data.get("name")
 
                 with sqlite3.connect('point_of_sale.db') as connection:
                     cursor = connection.cursor()
-                    cursor.execute("UPDATE product_info SET name =? WHERE product_id=?",
+                    cursor.execute("UPDATE product SET name =? WHERE product_id=?",
                                    (put_data["name"], product_id))
 
                     conn.commit()
@@ -205,7 +206,7 @@ def delete_products(product_id):
 
     with sqlite3.connect("point_of_sale.db") as connection:
         cursor = connection.cursor()
-        cursor.execute("DELETE FROM product_info WHERE product_id=" + str(product_id))
+        cursor.execute("DELETE FROM product WHERE product_id=" + str(product_id))
         connection.commit()
         response['status_code'] = 200
         response['message'] = "Product deleted successfully."
