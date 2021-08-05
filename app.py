@@ -1,3 +1,6 @@
+# Brent Lee Johnson ==> Class 1
+# Flask API Development EOMP
+# All imports
 import hmac
 import sqlite3
 import datetime
@@ -15,6 +18,7 @@ class User(object):
         self.password = password
 
 
+# Fetching the information
 def fetch_users():
     with sqlite3.connect('point_of_sale.db') as conn:
         cursor = conn.cursor()
@@ -29,6 +33,7 @@ def fetch_users():
     return new_data
 
 
+# Creating the user table
 def init_user_table():
     conn = sqlite3.connect("point_of_sale.db")
     print("Opened database successfully")
@@ -41,6 +46,7 @@ def init_user_table():
     print("user table created successfully")
 
 
+# Creating the product table
 def init_product_table():
     conn = sqlite3.connect("point_of_sale.db")
     print("Opened database successfully")
@@ -54,6 +60,7 @@ def init_product_table():
     conn.close()
 
 
+# Calling the tables
 init_user_table()
 init_product_table()
 users = fetch_users()
@@ -62,6 +69,7 @@ username_table = { u.username: u for u in users }
 userid_table = { u.id: u for u in users }
 
 
+# Authentication
 def authenticate(username, password):
     user = username_table.get(username, None)
     if user and hmac.compare_digest(user.password.encode('utf-8'), password.encode('utf-8')):
