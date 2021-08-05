@@ -5,6 +5,7 @@ import datetime
 from flask import Flask, request, jsonify
 from flask_jwt import JWT, jwt_required, current_identity
 from flask_cors import CORS
+from flask_mail import Mail, Message
 
 
 class User(object):
@@ -34,6 +35,7 @@ def init_user_table():
 
     conn.execute("CREATE TABLE IF NOT EXISTS user(user_id INTEGER PRIMARY KEY AUTOINCREMENT,"
                  "name TEXT NOT NULL,"
+                 "email TEXT NOT NULL,"
                  "username TEXT NOT NULL,"
                  "password TEXT NOT NULL)")
     print("user table created successfully")
@@ -76,6 +78,13 @@ app.debug = True
 app.config['SECRET_KEY'] = 'super-secret'
 app.config['JWT_EXPIRATION_DELTA'] = datetime.timedelta(seconds=4000)
 CORS(app)
+app.config['MAIL_SERVER'] = 'smtp.gmail.com'
+app.config['MAIL_PORT'] = 465
+app.config['MAIL_USERNAME'] = "huntermoonspear@gmail.com"
+app.config['MAIL_PASSWORD'] = "dianadragonheart"
+app.config['MAIL_USE_TLS'] = False
+app.config['MAIL_USE_SSL'] = True
+mail = Mail(app)
 
 jwt = JWT(app, authenticate, identity)
 
@@ -86,20 +95,37 @@ def user_registration():
 
     if request.method == "POST":
 
-        name = request.form['name']
-        username = request.form['username']
-        password = request.form['password']
+        name = request.form["name"]
+        username = request.form["username"]
+        password = request.form["password"]
+        email = request.form["email"]
 
         with sqlite3.connect("point_of_sale.db") as conn:
             cursor = conn.cursor()
             cursor.execute("INSERT INTO user("
                            "name,"
                            "username,"
-                           "password) VALUES(?, ?, ?)", (name, username, password))
+                           "password,"
+                           "email) VALUES(?, ?, ?, ?)", (name, username, password, email))
             conn.commit()
             response["message"] = "success"
             response["status_code"] = 201
-        return response
+            if response["status_code"] == 201:
+                msg = Message("Hello Message", sender="huntermoonspear@gmail.com", recipients=[email])
+                msg.body = "My email using Flask"
+                mail.send(msg)
+                return "Message sent"
+
+
+# @app.route('/email/<email>', methods=['GET'])
+# def send_email(email):
+#     mail = Mail(app)
+#
+#     msg = Message('Hello Message', sender='lottoemail123@gmail.com', recipients=[email])
+#     msg.body = "This is the email body after making some changes"
+#     mail.send(msg)
+#
+#     return "sent"
 
 
 # @app.route("/login/", methods=["POST"])
