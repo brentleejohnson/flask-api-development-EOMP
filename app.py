@@ -18,7 +18,7 @@ class User(object):
         self.password = password
 
 
-# Fetching the information
+# Fetching the information from the user table in the database
 def fetch_users():
     with sqlite3.connect('point_of_sale.db') as conn:
         cursor = conn.cursor()
@@ -60,7 +60,7 @@ def init_product_table():
     conn.close()
 
 
-# Calling the tables
+# Calling the tables from the database
 init_user_table()
 init_product_table()
 users = fetch_users()
@@ -81,9 +81,11 @@ def identity(payload):
     return userid_table.get(user_id, None)
 
 
+# Containing information that is compulsory for allowing the email to work
 app = Flask(__name__)
 app.debug = True
 app.config['SECRET_KEY'] = 'super-secret'
+# This allows for the token key to have an extended time limit
 app.config['JWT_EXPIRATION_DELTA'] = datetime.timedelta(seconds=4000)
 CORS(app)
 app.config['MAIL_SERVER'] = 'smtp.gmail.com'
@@ -97,6 +99,7 @@ mail = Mail(app)
 jwt = JWT(app, authenticate, identity)
 
 
+# Registration
 @app.route('/registration/', methods=["POST"])
 def user_registration():
     response = {}
@@ -118,6 +121,7 @@ def user_registration():
             conn.commit()
             response["message"] = "success"
             response["status_code"] = 201
+            # Email IF the registration works
             if response["status_code"] == 201:
                 msg = Message("Hello Message", sender="huntermoonspear@gmail.com", recipients=[email])
                 msg.body = "My email using Flask"
@@ -163,7 +167,9 @@ def user_registration():
 
 
 # Trolley & Products
+# Adding a product
 @app.route('/adding/', methods=["POST"])
+@jwt_required()
 def add_products():
     response = {}
 
@@ -186,6 +192,7 @@ def add_products():
         return response
 
 
+# View
 @app.route('/view/')
 def view_products():
     response = {}
@@ -201,6 +208,7 @@ def view_products():
     return response
 
 
+# Viewing 1 product individually
 @app.route('/view-one/<int:product_id>/')
 def view_one_product(product_id):
     response = {}
@@ -215,8 +223,9 @@ def view_one_product(product_id):
     return response
 
 
-# TROLLEY
+# Edit a product and targeting the product's specific id
 @app.route('/changing/<int:product_id>/', methods=["PUT"])
+@jwt_required()
 def updating_products(product_id):
     response = {}
 
@@ -248,7 +257,9 @@ def updating_products(product_id):
     return response
 
 
+# Deleting a product and target a specific product id
 @app.route('/delete/<int:product_id>/')
+@jwt_required()
 def delete_products(product_id):
     response = {}
 
