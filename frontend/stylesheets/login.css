@@ -18,12 +18,24 @@ body {
   align-items: center;
 }
 
-.form {
+.login {
   background: rgba(0, 0, 0, 0.5);
   border: 0.5px solid #000;
   width: 500px;
   height: 700px;
   border-radius: 5px;
+  position: absolute;
+  opacity: 1;
+}
+
+.register {
+  background: rgba(50, 120, 127, 0.5);
+  border: 0.5px solid #000;
+  width: 500px;
+  height: 700px;
+  border-radius: 5px;
+  position: absolute;
+  opacity: 0;
 }
 
 /* #login-page {
