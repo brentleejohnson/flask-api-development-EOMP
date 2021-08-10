@@ -6,5 +6,44 @@
 
 body {
   height: 100vh;
-  background: #00000f;
+}
+
+#login-page {
+  width: 100%;
+  height: 100%;
+  background: black;
+  overflow: hidden;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.background {
+  width: 100%;
+  height: 100%;
+  opacity: 0.3;
+}
+
+.login-container {
+  position: relative;
+  width: 500px;
+  height: 700px;
+  color: white;
+  font-size: 300px;
+  font-weight: bolder;
+  overflow: hidden;
+}
+
+.login-container img {
+  position: absolute;
+}
+
+#login-page,
+.login-container {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  object-fit: cover;
 }
