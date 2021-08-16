@@ -146,8 +146,8 @@ def login():
 
     if request.method == "POST":
 
-        username = request.form['username']
-        password = request.form['password']
+        username = request.json['username']
+        password = request.json['password']
 
         with sqlite3.connect("point_of_sale.db") as conn:
             cursor = conn.cursor()
