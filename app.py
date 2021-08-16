@@ -106,10 +106,10 @@ def user_registration():
 
     if request.method == "POST":
 
-        name = request.form["name"]
-        username = request.form["username"]
-        password = request.form["password"]
-        email = request.form["email"]
+        name = request.json["name"]
+        username = request.json["username"]
+        password = request.json["password"]
+        email = request.json["email"]
 
         with sqlite3.connect("point_of_sale.db") as conn:
             cursor = conn.cursor()
