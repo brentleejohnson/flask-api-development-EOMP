@@ -359,6 +359,19 @@ def edit_profile(user_id):
 
 # Trolley & Products
 # Adding a product
+@app.route('/get-user-products/<int:user_id>')
+def get_user_products(user_id):
+    response = {}
+    with sqlite3.connect('point_of_sale.db') as conn:
+        cursor = conn.cursor()
+        cursor.execute("SELECT * FROM product WHERE user_id='{}'".format(user_id))
+        response['status_code'] = 200
+        response['message'] = 'User products retrieved successfully'
+        response['products'] = cursor.fetchall()
+
+    return response
+
+
 @app.route('/adding/', methods=["POST"])
 @jwt_required()
 def add_products():
