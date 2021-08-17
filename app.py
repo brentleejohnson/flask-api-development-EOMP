@@ -10,12 +10,175 @@ from flask_jwt import JWT, jwt_required, current_identity
 from flask_cors import CORS
 from flask_mail import Mail, Message
 
+import cloudinary
+import cloudinary.uploader
+# import DNS
+# import validate_email
 
+
+# User class
 class User(object):
     def __init__(self, id, username, password):
         self.id = id
         self.username = username
         self.password = password
+
+
+# Product class
+class Product(object):
+    def __init__(self, user_id, product_image_url, product_name, product_description, product_price, product_category):
+        self.user_id = user_id
+        self.product_image_url = product_image_url
+        self.product_name = product_name
+        self.product_description = product_description
+        self.product_price = product_price
+        self.product_category = product_category
+
+
+# Database class
+class Database(object):
+    def __init__(self):
+        self.conn = sqlite3.connect("point_of_sale.db")
+        self.cursor = self.conn.cursor()
+
+    def registration(self, name, email, username, password):
+        # Sending user info to database
+        self.cursor.execute("INSERT INTO user("
+                            "name,"
+                            "email,"
+                            "username,"
+                            "password) VALUES(?, ?, ?, ?, ?)", (name, email, username, password))
+        self.conn.commit()
+
+    # Add product to database
+    def add_product(self, user_id, product_image, product_name, product_description, product_price, product_category):
+
+        # Upload image to cloudinary
+        cloudinary.config(cloud_name='ddvdj4vy6', api_key='416417923523248',
+                          api_secret='v_bGoSt-EgCYGO2wIkFKRERvqZ0')
+        upload_result = None
+
+        app.logger.info('%s file_to_upload', product_image)
+        if product_image:
+            upload_result = cloudinary.uploader.upload(product_image)   # Upload results
+            app.logger.info(upload_result)
+            # data = jsonify(upload_result)
+        self.cursor.execute("INSERT INTO product (user_id, product_name, product_image_url, product_category, "
+                            "product_description, product_price) VALUES (?, ?, ?, ?, ?, ?)",
+                            (user_id, upload_result['url'], product_name, product_description, product_price,
+                             product_category))
+
+        self.conn.commit()
+
+    # fetch products
+    def get_products(self):
+        self.cursor.execute("SELECT * FROM product")
+        return self.cursor.fetchall()
+
+    # fetch one specific product
+    def view_product(self, product_id):
+        self.cursor.execute('SELECT * FROM product WHERE product_id={}'.format(product_id))
+        return self.cursor.fetchone()
+
+    # edit product
+    def edit_product(self, product_data, product_id):
+        response = {}
+        put_data = {}
+
+        # if statements are to check if data received is not empty
+        if product_data.get('product_name'):
+            put_data['product_name'] = product_data.get('product_name')
+            with sqlite3.connect('point_of_sale.db') as conn:
+                cursor = conn.cursor()
+                cursor.execute("UPDATE product SET product_name=? WHERE product_id=?", (put_data["product_name"],
+                                                                                        product_id))
+                conn.commit()
+                response['message'] = "Update was successful"
+                response['status_code'] = 200
+
+        #
+        if product_data.get('product_category'):
+            put_data['product_category'] = product_data.get('product_category')
+            with sqlite3.connect('point_of_sale.db') as conn:
+                cursor = conn.cursor()
+                cursor.execute("UPDATE product SET product_category=? WHERE product_id=?",
+                               (put_data["product_category"], product_id))
+                conn.commit()
+                response['message'] = "Update was successful"
+                response['status_code'] = 200
+
+        if product_data.get('product_description'):
+            put_data['product_description'] = product_data.get('product_description')
+            with sqlite3.connect('point_of_sale.db') as conn:
+                cursor = conn.cursor()
+                cursor.execute("UPDATE product SET product_description=? WHERE product_id=?",
+                               (put_data["product_description"], product_id))
+                conn.commit()
+                response['message'] = "Update was successful"
+                response['status_code'] = 200
+
+        if product_data.get('product_price'):
+            put_data['product_price'] = product_data.get('product_price')
+            with sqlite3.connect('point_of_sale.db') as conn:
+                cursor = conn.cursor()
+                cursor.execute("UPDATE product SET product_price=? WHERE product_id=?", (put_data["product_price"],
+                                                                                         product_id))
+                conn.commit()
+                response['message'] = "Update was successful"
+                response['status_code'] = 200
+
+        return response
+
+    def edit_profile(self, user_data, user_id):
+        response = {}
+        put_data = {}
+
+        # if statements are to check if data received is not empty
+        if user_data.get('name'):
+            put_data['name'] = user_data.get('name')
+            with sqlite3.connect('point_of_sale.db') as conn:
+                cursor = conn.cursor()
+                cursor.execute("UPDATE user SET name=? WHERE user_id=?", (put_data["name"], user_id))
+                conn.commit()
+                response['message'] = "Update was successful"
+                response['status_code'] = 200
+
+        if user_data.get('email'):
+            put_data['email'] = user_data.get('email')
+            with sqlite3.connect('point_of_sale.db') as conn:
+                cursor = conn.cursor()
+                cursor.execute("UPDATE user SET email=? WHERE user_id=?",
+                               (put_data["email"], user_id))
+                conn.commit()
+                response['message'] = "Update was successful"
+                response['status_code'] = 200
+
+        if user_data.get('username'):
+            put_data['username'] = user_data.get('username')
+            with sqlite3.connect('point_of_sale.db') as conn:
+                cursor = conn.cursor()
+                cursor.execute("UPDATE user SET username=? WHERE user_id=?", (put_data["username"],user_id))
+                conn.commit()
+                response['message'] = "Update was successful"
+                response['status_code'] = 200
+
+        if user_data.get('password'):
+            put_data['password'] = user_data.get('password')
+            with sqlite3.connect('point_of_sale.db') as conn:
+                cursor = conn.cursor()
+                cursor.execute("UPDATE user SET password=? WHERE user_id=?", (put_data["password"],user_id))
+                conn.commit()
+                response['message'] = "Update was successful"
+                response['status_code'] = 200
+
+        return response
+
+    # Delete product
+    def delete_product(self, product_id):
+        with sqlite3.connect('point_of_sale.db') as conn:
+            cursor = conn.cursor()
+            cursor.execute('DELETE FROM product WHERE product_id={}'.format(product_id))
+            conn.commit()
 
 
 # Fetching the information from the user table in the database
@@ -166,6 +329,34 @@ def login():
             return jsonify(response)
 
 
+# View users
+@app.route('/get-user/<username>/')
+def get_user(username):
+    response = {}
+
+    with sqlite3.connect('point_of_sale.db') as conn:
+        cursor = conn.cursor()
+        cursor.execute('SELECT * FROM user where username={}'.format(username))
+
+        response['status_code'] = 200
+        response['message'] = 'User retrieved successfully'
+        response['user'] = cursor.fetchone()
+
+    return response
+
+
+@app.route('/edit-profile/<int:user_id>', methods=['PUT'])
+def edit_profile(user_id):
+    response = None
+
+    if request.method == 'PUT':
+        incoming_data = dict(request.json)
+        db = Database()
+        response = db.edit_profile(incoming_data, user_id)
+
+        return response
+
+
 # Trolley & Products
 # Adding a product
 @app.route('/adding/', methods=["POST"])
@@ -192,7 +383,7 @@ def add_products():
         return response
 
 
-# View
+# View products
 @app.route('/view/')
 def view_products():
     response = {}
